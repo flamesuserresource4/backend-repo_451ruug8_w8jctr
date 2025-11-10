@@ -1,48 +1,51 @@
 """
-Database Schemas
+Database Schemas for FluentLeap
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a collection in MongoDB.
+Collection name is the lowercase of the class name.
 """
-
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from datetime import date
 
-# Example schemas (replace with your own):
+class Challenge(BaseModel):
+    """Daily challenge containing a GRE word and an idiom"""
+    date: str = Field(..., description="ISO date string YYYY-MM-DD")
+    word: str
+    word_meaning: str
+    word_example: Optional[str] = None
+    idiom: str
+    idiom_meaning: str
+    idiom_example: Optional[str] = None
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class Story(BaseModel):
+    """User submitted story entry"""
+    date: str = Field(..., description="ISO date string YYYY-MM-DD")
+    text: str
+    tokens: int
+    unique_words: int
+    gre_hits: int
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Feedback(BaseModel):
+    """Feedback generated for a story"""
+    story_id: str
+    readability: str
+    strengths: List[str] = []
+    suggestions: List[str] = []
+    best_version: str
+    score: int = Field(..., ge=0, le=100)
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Timelineevent(BaseModel):
+    """Timeline event for activity feed"""
+    kind: str = Field(..., description="story|feedback|practice|milestone")
+    title: str
+    detail: Optional[str] = None
+    ref_id: Optional[str] = None
+    date: str = Field(..., description="ISO date string YYYY-MM-DD")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Practiceresult(BaseModel):
+    """Practice quiz result"""
+    date: str
+    correct: int
+    total: int
+    breakdown: List[Dict[str, Any]] = []
